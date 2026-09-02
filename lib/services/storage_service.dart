@@ -31,7 +31,7 @@ class StorageService {
     DayPlan(weekday: 4, meal1Sabzi: 'Tinda',            meal2Main: 'Dal Makhani',         tea: 'Masala Chai'),
     DayPlan(weekday: 5, meal1Sabzi: 'Gobhi Matar',      meal2Main: 'Palak Paneer',        tea: 'Cardamom Tea'),
     DayPlan(weekday: 6, meal1Sabzi: 'Aloo Jeera',       meal2Main: 'Mix Veg Gravy',
-            meal1BreadType: 'Parantha', meal1RiceType: 'Pulao',   tea: 'Masala Chai'),
+            meal1BreadType: 'Parantha', riceType: 'Pulao',   tea: 'Masala Chai'),
     DayPlan(weekday: 7, meal1Sabzi: 'Aloo Puri',        meal2Main: 'Chana Dal',           tea: 'Masala Chai'),
   ]);
 
