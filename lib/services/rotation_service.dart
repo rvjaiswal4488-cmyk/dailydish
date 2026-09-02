@@ -1,7 +1,39 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/week_plan.dart';
 import '../models/day_plan.dart';
+import 'storage_service.dart';
 
 class RotationService {
+  static const String _lastRotationKey = 'last_rotation_date';
+
+  /// Checks if today is Saturday and if we haven't rotated yet today.
+  /// If so, rotates the week plan and saves it.
+  static Future<WeekPlan> checkAndRotate(WeekPlan currentPlan) async {
+    final now = DateTime.now();
+    // Only rotate if today is Saturday (weekday == 6)
+    if (now.weekday != DateTime.saturday) {
+      return currentPlan;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastRotationStr = prefs.getString(_lastRotationKey);
+    final todayStr = '${now.year}-${now.month}-${now.day}';
+
+    if (lastRotationStr == todayStr) {
+      // Already rotated today
+      return currentPlan;
+    }
+
+    // Rotate and save
+    final newPlan = rotateWeek(currentPlan);
+    final storage = StorageService();
+    await storage.saveWeekPlan(newPlan);
+    
+    await prefs.setString(_lastRotationKey, todayStr);
+    
+    return newPlan;
+  }
+
   /// Rotates the week plan: shifts days forward by 1.
   /// (e.g. what was on Monday moves to Tuesday, Sunday moves to Monday)
   /// EXCEPT for Sunday's meal 1 which is locked to Aloo Puri.

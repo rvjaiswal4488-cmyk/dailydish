@@ -26,6 +26,9 @@ void main() async {
   final storage = StorageService();
 
   WeekPlan weekPlan = await storage.loadWeekPlan();
+  
+  // Apply rotation logic on Saturday
+  weekPlan = await RotationService.checkAndRotate(weekPlan);
   final drySabzis = await storage.loadDrySabzis();
   final gravyDals = await storage.loadGravyDals();
 
