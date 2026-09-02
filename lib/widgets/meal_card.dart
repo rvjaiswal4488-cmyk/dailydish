@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/translation_service.dart';
+
 /// A reusable, beautifully styled meal slot card.
 ///
 /// Displays the slot name (e.g. "Meal 1"), the dish name in large text,
@@ -38,7 +40,7 @@ class MealCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.last.withValues(alpha: 0.40),
+            color: gradientColors.last.withValues(alpha: 0.20), // Softer shadow for DailyMeal
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -71,7 +73,7 @@ class MealCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        slotName.toUpperCase(),
+                        TranslationService.tr(slotName).toUpperCase(),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -80,15 +82,13 @@ class MealCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        dishName.isEmpty ? '—  Not set' : dishName,
+                      DynamicTranslatedText(
+                        dishName.isEmpty ? TranslationService.tr('— Not set') : dishName,
                         style: GoogleFonts.poppins(
                           fontSize: 19,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -157,7 +157,7 @@ class MealCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            label,
+            TranslationService.tr(label),
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,

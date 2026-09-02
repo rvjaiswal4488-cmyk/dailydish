@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/storage_service.dart';
+import '../services/translation_service.dart';
 
 /// Screen for managing the household's dish library.
 /// Split into "Dry Sabzis" (Afternoon) and "Gravy / Dal" (Night).
@@ -10,6 +11,7 @@ class ManageDishesScreen extends StatefulWidget {
   final List<String> gravyDals;
   final void Function(List<String>) onDrySabzisUpdated;
   final void Function(List<String>) onGravyDalsUpdated;
+  final VoidCallback onToggleTranslation;
 
   const ManageDishesScreen({
     super.key,
@@ -17,6 +19,7 @@ class ManageDishesScreen extends StatefulWidget {
     required this.gravyDals,
     required this.onDrySabzisUpdated,
     required this.onGravyDalsUpdated,
+    required this.onToggleTranslation,
   });
 
   @override
@@ -55,12 +58,12 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: const Color(0xFFFFF8F0),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(
           isDry ? 'Add Dry Sabzi' : 'Add Gravy / Dal',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w700,
-            color: const Color(0xFFE65100),
+            color: Theme.of(context).primaryColor,
           ),
         ),
         content: TextField(
@@ -69,16 +72,6 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
           style: GoogleFonts.inter(),
           decoration: InputDecoration(
             hintText: 'Dish name…',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE65100), width: 2),
-            ),
           ),
           onSubmitted: (v) => Navigator.of(ctx).pop(v.trim()),
         ),
@@ -89,14 +82,7 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE65100),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text('Add',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: Colors.white)),
+            child: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -120,7 +106,7 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: const Color(0xFFFFF8F0),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text('Remove Dish',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
         content: Text(
@@ -136,12 +122,8 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Remove',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: Colors.white)),
+            child: Text('Remove', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -165,16 +147,23 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F0),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Dish Library',
+          TranslationService.tr('Dish Library'),
           style: GoogleFonts.poppins(
               fontWeight: FontWeight.w700, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE65100),
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.translate_rounded),
+            onPressed: widget.onToggleTranslation,
+            tooltip: 'Translate to Hindi',
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(110),
           child: Column(
@@ -206,9 +195,9 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.white.withValues(alpha: 0.6),
                 labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700),
-                tabs: const [
-                  Tab(text: 'Afternoon (Dry)'),
-                  Tab(text: 'Night (Gravy/Dal)'),
+                tabs: [
+                  Tab(text: TranslationService.tr('Afternoon (Dry)')),
+                  Tab(text: TranslationService.tr('Night (Gravy/Dal)')),
                 ],
               ),
             ],
@@ -228,10 +217,10 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
       // ── FAB ───────────────────────────────────────────────────────────────
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addDish,
-        backgroundColor: const Color(0xFFE65100),
+        backgroundColor: Theme.of(context).primaryColor,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(
-          'Add Dish',
+          TranslationService.tr('Add Dish'),
           style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600, color: Colors.white),
         ),
@@ -293,6 +282,7 @@ class _DishTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -312,18 +302,18 @@ class _DishTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE0B2),
+              color: primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.restaurant_menu_rounded,
-              color: Color(0xFFE65100),
+              color: primaryColor,
               size: 18,
             ),
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
+            child: DynamicTranslatedText(
               dish,
               style: GoogleFonts.inter(
                 fontSize: 15,

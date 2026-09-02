@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../models/week_plan.dart';
 import '../services/storage_service.dart';
+import '../services/translation_service.dart';
 import '../widgets/meal_card.dart';
 import '../widgets/slot_edit_sheet.dart';
 import '../widgets/bread_count_editor.dart';
@@ -14,6 +15,7 @@ class HomeScreen extends StatefulWidget {
   final List<String> drySabzis;
   final List<String> gravyDals;
   final void Function(WeekPlan) onPlanUpdated;
+  final VoidCallback onToggleTranslation;
 
   const HomeScreen({
     super.key,
@@ -21,6 +23,7 @@ class HomeScreen extends StatefulWidget {
     required this.drySabzis,
     required this.gravyDals,
     required this.onPlanUpdated,
+    required this.onToggleTranslation,
   });
 
   @override
@@ -93,32 +96,39 @@ class _HomeScreenState extends State<HomeScreen>
     final dateStr = DateFormat('EEEE, d MMMM yyyy').format(now);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F0),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: FadeTransition(
         opacity: _fadeAnim,
         child: CustomScrollView(
           slivers: [
             // ── App Bar ───────────────────────────────────────────────────
             SliverAppBar(
-              expandedHeight: 160,
+              expandedHeight: 180,
               pinned: true,
-              backgroundColor: const Color(0xFFE65100),
+              backgroundColor: Theme.of(context).primaryColor,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.translate_rounded),
+                  onPressed: widget.onToggleTranslation,
+                  tooltip: 'Translate to Hindi',
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFFE65100), Color(0xFFFF8F00)],
+                      colors: [Theme.of(context).primaryColor, const Color(0xFFE57373)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                   ),
-                  padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        _greeting,
+                        TranslationService.tr(_greeting),
                         style: GoogleFonts.poppins(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -139,18 +149,60 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
 
-            // ── Section label ─────────────────────────────────────────────
+            // ── Members Count & Title ──────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Text(
-                  "Today's Menu (Afternoon Prep)",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFFBF360C),
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        TranslationService.tr("Today's Menu (Afternoon Prep)"),
+                        style: GoogleFonts.poppins(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF8E0000), // Deep red
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            TranslationService.tr('Members'),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          BreadCountEditor(
+                            count: today.memberCount,
+                            color: Theme.of(context).primaryColor,
+                            onChanged: (v) {
+                              today.memberCount = v;
+                              _saveInstantly();
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
                 ),
               ),
             ),
@@ -162,11 +214,11 @@ class _HomeScreenState extends State<HomeScreen>
                 icon: Icons.wb_sunny_rounded,
                 dishName: today.meal1Sabzi,
                 gradientColors: const [
-                  Color(0xFFFF7043),
-                  Color(0xFFE64A19),
+                  Color(0xFFFFA07A),
+                  Color(0xFFFF7F50),
                 ],
                 onEdit: today.isSunday ? null : () => _editSlot(
-                  'Meal 1 (Dry Sabzi)',
+                  TranslationService.tr('Afternoon (Dry)'),
                   today.meal1Sabzi,
                   widget.drySabzis,
                   (v) => today.meal1Sabzi = v,
@@ -195,16 +247,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ],
                 ),
-                riceRow: today.isSunday ? null : ToggleChip(
-                  option1: 'Rice',
-                  option2: 'Pulao',
-                  currentValue: today.meal1RiceType,
-                  color: Colors.white,
-                  onChanged: (v) {
-                    today.meal1RiceType = v;
-                    _saveInstantly();
-                  },
-                ),
+                riceRow: null, // Rice is now only configured in Meal 2
               ),
             ),
 
@@ -215,11 +258,11 @@ class _HomeScreenState extends State<HomeScreen>
                 icon: Icons.nightlight_round,
                 dishName: today.meal2Main,
                 gradientColors: const [
-                  Color(0xFFBF360C),
-                  Color(0xFF870000),
+                  Color(0xFF43A047), // Fresh Green
+                  Color(0xFF1B5E20), // Dark Green
                 ],
                 onEdit: () => _editSlot(
-                  'Meal 2 (Gravy/Dal)',
+                  TranslationService.tr('Night (Gravy/Dal)'),
                   today.meal2Main,
                   widget.gravyDals,
                   (v) => today.meal2Main = v,
@@ -228,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Roti ',
+                      TranslationService.tr('Roti'),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -249,10 +292,10 @@ class _HomeScreenState extends State<HomeScreen>
                 riceRow: ToggleChip(
                   option1: 'Rice',
                   option2: 'Pulao',
-                  currentValue: today.meal2RiceType,
+                  currentValue: today.riceType,
                   color: Colors.white,
                   onChanged: (v) {
-                    today.meal2RiceType = v;
+                    today.riceType = v;
                     _saveInstantly();
                   },
                 ),
@@ -262,54 +305,23 @@ class _HomeScreenState extends State<HomeScreen>
             // ── Tea card ──────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: MealCard(
-                slotName: '☕ Tea',
+                slotName: 'Tea',
                 icon: Icons.emoji_food_beverage_rounded,
                 dishName: today.tea,
                 gradientColors: const [
-                  Color(0xFFFFB300),
+                  Color(0xFFFBC02D),
                   Color(0xFFF57F17),
                 ],
                 onEdit: () => _editSlot(
-                  'Tea',
+                  TranslationService.tr('Tea'),
                   today.tea,
-                  // Pass both lists or an empty list, doesn't matter much for tea
                   [...widget.drySabzis, ...widget.gravyDals],
                   (v) => today.tea = v,
                 ),
               ),
             ),
 
-            // ── Footer note ───────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE0B2),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline_rounded,
-                          color: Color(0xFFE65100), size: 18),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Meal plan auto-rotates every Saturday with fresh dishes!',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: const Color(0xFFBF360C),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
         ),
       ),

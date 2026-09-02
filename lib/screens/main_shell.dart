@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/week_plan.dart';
+import '../services/translation_service.dart';
 import 'home_screen.dart';
 import 'manage_dishes_screen.dart';
 import 'weekly_plan_screen.dart';
@@ -62,6 +63,12 @@ class _MainShellState extends State<MainShell>
     _tabFadeCtrl.forward();
   }
 
+  void _toggleTranslation() {
+    setState(() {
+      TranslationService.isHindi = !TranslationService.isHindi;
+    });
+  }
+
   // ──────────────────────────────── callbacks ───────────────────────────────
 
   void _onPlanUpdated(WeekPlan updated) {
@@ -86,6 +93,7 @@ class _MainShellState extends State<MainShell>
           drySabzis: _drySabzis,
           gravyDals: _gravyDals,
           onPlanUpdated: _onPlanUpdated,
+          onToggleTranslation: _toggleTranslation,
         );
       case 1:
         return WeeklyPlanScreen(
@@ -93,6 +101,7 @@ class _MainShellState extends State<MainShell>
           drySabzis: _drySabzis,
           gravyDals: _gravyDals,
           onPlanUpdated: _onPlanUpdated,
+          onToggleTranslation: _toggleTranslation,
         );
       case 2:
       default:
@@ -101,6 +110,7 @@ class _MainShellState extends State<MainShell>
           gravyDals: _gravyDals,
           onDrySabzisUpdated: _onDrySabzisUpdated,
           onGravyDalsUpdated: _onGravyDalsUpdated,
+          onToggleTranslation: _toggleTranslation,
         );
     }
   }
@@ -149,19 +159,19 @@ class _BottomBar extends StatelessWidget {
             children: [
               _NavItem(
                 icon: Icons.wb_sunny_rounded,
-                label: 'Today',
+                label: TranslationService.tr('Today'),
                 selected: currentIndex == 0,
                 onTap: () => onTap(0),
               ),
               _NavItem(
                 icon: Icons.calendar_month_rounded,
-                label: 'Weekly',
+                label: TranslationService.tr('Weekly'),
                 selected: currentIndex == 1,
                 onTap: () => onTap(1),
               ),
               _NavItem(
                 icon: Icons.menu_book_rounded,
-                label: 'Dishes',
+                label: TranslationService.tr('Dishes'),
                 selected: currentIndex == 2,
                 onTap: () => onTap(2),
               ),
@@ -189,7 +199,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color =
-        selected ? const Color(0xFFE65100) : Colors.grey.shade500;
+        selected ? const Color(0xFFD9534F) : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: onTap,
@@ -199,7 +209,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         decoration: BoxDecoration(
           color: selected
-              ? const Color(0xFFE65100).withValues(alpha: 0.10)
+              ? const Color(0xFFD9534F).withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),

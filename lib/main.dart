@@ -6,6 +6,7 @@ import 'models/week_plan.dart';
 import 'screens/main_shell.dart';
 import 'services/rotation_service.dart';
 import 'services/storage_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,9 @@ void main() async {
     statusBarIconBrightness: Brightness.light,
   ));
 
+  // Initialize notifications
+  await NotificationService().init();
+
   // Load persisted data.
   final storage = StorageService();
 
@@ -29,23 +33,19 @@ void main() async {
   final drySabzis = await storage.loadDrySabzis();
   final gravyDals = await storage.loadGravyDals();
 
-  // Rotate based on time logic could go here if needed
-  // For now, rotation is manual or handled on a scheduled check
-  // (Assuming rotation logic handles the separation of dry/gravy)
-
-  runApp(DailyDishApp(
+  runApp(DailyMealApp(
     initialWeekPlan: weekPlan, 
     initialDrySabzis: drySabzis,
     initialGravyDals: gravyDals,
   ));
 }
 
-class DailyDishApp extends StatelessWidget {
+class DailyMealApp extends StatelessWidget {
   final WeekPlan initialWeekPlan;
   final List<String> initialDrySabzis;
   final List<String> initialGravyDals;
 
-  const DailyDishApp({
+  const DailyMealApp({
     super.key,
     required this.initialWeekPlan,
     required this.initialDrySabzis,
@@ -55,7 +55,7 @@ class DailyDishApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DailyDish',
+      title: 'DailyMeal',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
       home: MainShell(
@@ -67,16 +67,21 @@ class DailyDishApp extends StatelessWidget {
   }
 
   ThemeData _buildTheme() {
+    // New premium palette
+    const primaryColor = Color(0xFFD9534F); // Terracotta Red
+    const backgroundColor = Color(0xFFFDFBF7); // Clean Off-White
+    const textColor = Color(0xFF3E2723);
+
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFE65100),
-        primary: const Color(0xFFE65100),
-        secondary: const Color(0xFFFFB300),
-        surface: const Color(0xFFFFF8F0),
+        seedColor: primaryColor,
+        primary: primaryColor,
+        secondary: const Color(0xFFFFA07A),
+        surface: backgroundColor,
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: const Color(0xFFFFF8F0),
+      scaffoldBackgroundColor: backgroundColor,
     );
 
     return base.copyWith(
@@ -84,17 +89,17 @@ class DailyDishApp extends StatelessWidget {
         displayLarge: GoogleFonts.poppins(
           fontSize: 32,
           fontWeight: FontWeight.w800,
-          color: const Color(0xFF3E2723),
+          color: textColor,
         ),
         headlineMedium: GoogleFonts.poppins(
           fontSize: 22,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3E2723),
+          color: textColor,
         ),
         titleLarge: GoogleFonts.poppins(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF3E2723),
+          color: textColor,
         ),
         bodyMedium: GoogleFonts.inter(
           fontSize: 14,
@@ -102,7 +107,7 @@ class DailyDishApp extends StatelessWidget {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFFE65100),
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
         titleTextStyle: GoogleFonts.poppins(
@@ -114,7 +119,7 @@ class DailyDishApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE65100),
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -126,7 +131,7 @@ class DailyDishApp extends StatelessWidget {
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFFE65100),
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       cardTheme: CardThemeData(
@@ -145,7 +150,7 @@ class DailyDishApp extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE65100), width: 2),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
       ),
     );

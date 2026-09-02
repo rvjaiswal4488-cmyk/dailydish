@@ -20,15 +20,15 @@ class RotationService {
       // Copy the source day's data, but update the weekday to the new slot
       final rotatedDay = DayPlan(
         weekday: targetWeekday,
+        memberCount: sourceDay.memberCount,
+        riceType: sourceDay.riceType,
         // Meal 1
         meal1Sabzi: sourceDay.meal1Sabzi,
         meal1BreadType: sourceDay.meal1BreadType,
         meal1BreadCount: sourceDay.meal1BreadCount,
-        meal1RiceType: sourceDay.meal1RiceType,
         // Meal 2
         meal2Main: sourceDay.meal2Main,
         meal2BreadCount: sourceDay.meal2BreadCount,
-        meal2RiceType: sourceDay.meal2RiceType,
         // Tea
         tea: sourceDay.tea,
       );

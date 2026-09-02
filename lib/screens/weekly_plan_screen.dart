@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/day_plan.dart';
 import '../models/week_plan.dart';
 import '../services/storage_service.dart';
+import '../services/translation_service.dart';
 import '../widgets/slot_edit_sheet.dart';
 import '../widgets/bread_count_editor.dart';
 import '../widgets/toggle_chip.dart';
@@ -14,6 +15,7 @@ class WeeklyPlanScreen extends StatefulWidget {
   final List<String> drySabzis;
   final List<String> gravyDals;
   final void Function(WeekPlan) onPlanUpdated;
+  final VoidCallback onToggleTranslation;
 
   const WeeklyPlanScreen({
     super.key,
@@ -21,6 +23,7 @@ class WeeklyPlanScreen extends StatefulWidget {
     required this.drySabzis,
     required this.gravyDals,
     required this.onPlanUpdated,
+    required this.onToggleTranslation,
   });
 
   @override
@@ -70,18 +73,25 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F0),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Weekly Plan',
+          TranslationService.tr('Weekly Plan'),
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFFE65100),
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.translate_rounded),
+            onPressed: widget.onToggleTranslation,
+            tooltip: 'Translate to Hindi',
+          ),
+        ],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -94,21 +104,21 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
             isToday: isToday,
             onEditMeal1: () => _editSlot(
               day: day,
-              slotLabel: 'Meal 1 (Dry Sabzi)',
+              slotLabel: TranslationService.tr('Afternoon (Dry)'),
               currentValue: day.meal1Sabzi,
               suggestions: widget.drySabzis,
               onUpdate: (v) => day.meal1Sabzi = v,
             ),
             onEditMeal2: () => _editSlot(
               day: day,
-              slotLabel: 'Meal 2 (Gravy/Dal)',
+              slotLabel: TranslationService.tr('Night (Gravy/Dal)'),
               currentValue: day.meal2Main,
               suggestions: widget.gravyDals,
               onUpdate: (v) => day.meal2Main = v,
             ),
             onEditTea: () => _editSlot(
               day: day,
-              slotLabel: 'Tea',
+              slotLabel: TranslationService.tr('Tea'),
               currentValue: day.tea,
               suggestions: [...widget.drySabzis, ...widget.gravyDals],
               onUpdate: (v) => day.tea = v,
@@ -142,13 +152,14 @@ class _DayTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: isToday
-            ? Border.all(color: const Color(0xFFE65100), width: 2)
+            ? Border.all(color: primaryColor, width: 2)
             : Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
@@ -168,17 +179,17 @@ class _DayTile extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: isToday
-                  ? const Color(0xFFE65100)
-                  : const Color(0xFFFFE0B2),
+                  ? primaryColor
+                  : primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text(
-                day.shortName,
+                TranslationService.tr(day.shortName),
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: isToday ? Colors.white : const Color(0xFFBF360C),
+                  color: isToday ? Colors.white : primaryColor,
                 ),
               ),
             ),
@@ -186,12 +197,12 @@ class _DayTile extends StatelessWidget {
           title: Row(
             children: [
               Text(
-                day.dayName,
+                TranslationService.tr(day.dayName),
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: isToday
-                      ? const Color(0xFFE65100)
+                      ? primaryColor
                       : const Color(0xFF3E2723),
                 ),
               ),
@@ -201,15 +212,15 @@ class _DayTile extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFE0B2),
+                    color: primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
-                    'Today',
+                    TranslationService.tr('Today'),
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFE65100),
+                      color: primaryColor,
                     ),
                   ),
                 ),
@@ -221,9 +232,9 @@ class _DayTile extends StatelessWidget {
             const SizedBox(height: 8),
             _SlotRow(
               icon: Icons.wb_sunny_rounded,
-              label: 'Meal 1 (Afternoon)',
+              label: 'Meal 1 · Afternoon (Dry)',
               value: day.meal1Sabzi,
-              color: const Color(0xFFFF7043),
+              color: const Color(0xFFFFA07A),
               onEdit: day.isSunday ? null : onEditMeal1,
               isLocked: day.isSunday,
               subItems: day.isSunday ? null : Column(
@@ -236,7 +247,7 @@ class _DayTile extends StatelessWidget {
                         option1: 'Roti',
                         option2: 'Parantha',
                         currentValue: day.meal1BreadType,
-                        color: const Color(0xFFFF7043),
+                        color: const Color(0xFFFFA07A),
                         onChanged: (v) {
                           day.meal1BreadType = v;
                           onSaveState();
@@ -244,26 +255,9 @@ class _DayTile extends StatelessWidget {
                       ),
                       BreadCountEditor(
                         count: day.meal1BreadCount,
-                        color: const Color(0xFFFF7043),
+                        color: const Color(0xFFFFA07A),
                         onChanged: (v) {
                           day.meal1BreadCount = v;
-                          onSaveState();
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Rice Selection', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
-                      ToggleChip(
-                        option1: 'Rice',
-                        option2: 'Pulao',
-                        currentValue: day.meal1RiceType,
-                        color: const Color(0xFFFF7043),
-                        onChanged: (v) {
-                          day.meal1RiceType = v;
                           onSaveState();
                         },
                       ),
@@ -275,9 +269,9 @@ class _DayTile extends StatelessWidget {
             const Divider(height: 16, indent: 64, endIndent: 16),
             _SlotRow(
               icon: Icons.nightlight_round,
-              label: 'Meal 2 (Night)',
+              label: 'Meal 2 · Night (Gravy / Dal)',
               value: day.meal2Main,
-              color: const Color(0xFFBF360C),
+              color: const Color(0xFF43A047), // Green
               onEdit: onEditMeal2,
               subItems: Column(
                 children: [
@@ -285,10 +279,10 @@ class _DayTile extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Roti', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFBF360C))),
+                      Text(TranslationService.tr('Roti'), style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF43A047))),
                       BreadCountEditor(
                         count: day.meal2BreadCount,
-                        color: const Color(0xFFBF360C),
+                        color: const Color(0xFF43A047),
                         onChanged: (v) {
                           day.meal2BreadCount = v;
                           onSaveState();
@@ -300,14 +294,14 @@ class _DayTile extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Rice Selection', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
+                      Text(TranslationService.tr('Rice Selection'), style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
                       ToggleChip(
                         option1: 'Rice',
                         option2: 'Pulao',
-                        currentValue: day.meal2RiceType,
-                        color: const Color(0xFFBF360C),
+                        currentValue: day.riceType,
+                        color: const Color(0xFF43A047),
                         onChanged: (v) {
-                          day.meal2RiceType = v;
+                          day.riceType = v;
                           onSaveState();
                         },
                       ),
@@ -321,7 +315,7 @@ class _DayTile extends StatelessWidget {
               icon: Icons.emoji_food_beverage_rounded,
               label: 'Tea',
               value: day.tea,
-              color: const Color(0xFFFFB300),
+              color: const Color(0xFFFBC02D),
               onEdit: onEditTea,
             ),
             const SizedBox(height: 12),
@@ -376,7 +370,7 @@ class _SlotRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      label,
+                      TranslationService.tr(label),
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -384,8 +378,8 @@ class _SlotRow extends StatelessWidget {
                         letterSpacing: 0.8,
                       ),
                     ),
-                    Text(
-                      value.isEmpty ? '— Not set' : value,
+                    DynamicTranslatedText(
+                      value.isEmpty ? TranslationService.tr('— Not set') : value,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

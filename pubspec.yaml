@@ -1,4 +1,4 @@
-name: dailydish
+name: dailymeal
 description: Smart daily meal planner for your household
 publish_to: 'none'
 
@@ -13,6 +13,9 @@ dependencies:
   shared_preferences: ^2.2.2
   google_fonts: ^6.1.0
   intl: ^0.19.0
+  flutter_local_notifications: ^17.1.2
+  timezone: ^0.9.2
+  translator: ^0.1.7
 
 dev_dependencies:
   flutter_test:
