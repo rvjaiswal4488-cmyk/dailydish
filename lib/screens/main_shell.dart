@@ -9,12 +9,14 @@ import 'weekly_plan_screen.dart';
 /// Root shell widget that owns the bottom navigation bar and tab state.
 class MainShell extends StatefulWidget {
   final WeekPlan initialWeekPlan;
-  final List<String> initialDishes;
+  final List<String> initialDrySabzis;
+  final List<String> initialGravyDals;
 
   const MainShell({
     super.key,
     required this.initialWeekPlan,
-    required this.initialDishes,
+    required this.initialDrySabzis,
+    required this.initialGravyDals,
   });
 
   @override
@@ -25,7 +27,8 @@ class _MainShellState extends State<MainShell>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late WeekPlan _weekPlan;
-  late List<String> _dishes;
+  late List<String> _drySabzis;
+  late List<String> _gravyDals;
 
   // For a smooth tab-switch fade effect
   late AnimationController _tabFadeCtrl;
@@ -35,7 +38,8 @@ class _MainShellState extends State<MainShell>
   void initState() {
     super.initState();
     _weekPlan = widget.initialWeekPlan;
-    _dishes = List<String>.from(widget.initialDishes);
+    _drySabzis = List<String>.from(widget.initialDrySabzis);
+    _gravyDals = List<String>.from(widget.initialGravyDals);
 
     _tabFadeCtrl = AnimationController(
       vsync: this,
@@ -64,8 +68,12 @@ class _MainShellState extends State<MainShell>
     setState(() => _weekPlan = updated);
   }
 
-  void _onDishesUpdated(List<String> updated) {
-    setState(() => _dishes = updated);
+  void _onDrySabzisUpdated(List<String> updated) {
+    setState(() => _drySabzis = updated);
+  }
+
+  void _onGravyDalsUpdated(List<String> updated) {
+    setState(() => _gravyDals = updated);
   }
 
   // ──────────────────────────────── build ──────────────────────────────────
@@ -75,20 +83,24 @@ class _MainShellState extends State<MainShell>
       case 0:
         return HomeScreen(
           weekPlan: _weekPlan,
-          dishes: _dishes,
+          drySabzis: _drySabzis,
+          gravyDals: _gravyDals,
           onPlanUpdated: _onPlanUpdated,
         );
       case 1:
         return WeeklyPlanScreen(
           weekPlan: _weekPlan,
-          dishes: _dishes,
+          drySabzis: _drySabzis,
+          gravyDals: _gravyDals,
           onPlanUpdated: _onPlanUpdated,
         );
       case 2:
       default:
         return ManageDishesScreen(
-          dishes: _dishes,
-          onDishesUpdated: _onDishesUpdated,
+          drySabzis: _drySabzis,
+          gravyDals: _gravyDals,
+          onDrySabzisUpdated: _onDrySabzisUpdated,
+          onGravyDalsUpdated: _onGravyDalsUpdated,
         );
     }
   }

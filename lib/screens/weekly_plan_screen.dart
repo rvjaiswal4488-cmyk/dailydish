@@ -5,17 +5,21 @@ import '../models/day_plan.dart';
 import '../models/week_plan.dart';
 import '../services/storage_service.dart';
 import '../widgets/slot_edit_sheet.dart';
+import '../widgets/bread_count_editor.dart';
+import '../widgets/toggle_chip.dart';
 
 /// Displays all 7 days of the week plan as expandable tiles.
 class WeeklyPlanScreen extends StatefulWidget {
   final WeekPlan weekPlan;
-  final List<String> dishes;
+  final List<String> drySabzis;
+  final List<String> gravyDals;
   final void Function(WeekPlan) onPlanUpdated;
 
   const WeeklyPlanScreen({
     super.key,
     required this.weekPlan,
-    required this.dishes,
+    required this.drySabzis,
+    required this.gravyDals,
     required this.onPlanUpdated,
   });
 
@@ -33,6 +37,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     required DayPlan day,
     required String slotLabel,
     required String currentValue,
+    required List<String> suggestions,
     required void Function(String) onUpdate,
   }) async {
     await showModalBottomSheet(
@@ -42,7 +47,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       builder: (_) => SlotEditSheet(
         slotLabel: slotLabel,
         initialValue: currentValue,
-        suggestions: widget.dishes,
+        suggestions: suggestions,
         onSave: (newValue) async {
           setState(() => onUpdate(newValue));
           final updatedPlan = widget.weekPlan.withUpdatedDay(day);
@@ -51,6 +56,13 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _saveInstantly(DayPlan day) async {
+    final updatedPlan = widget.weekPlan.withUpdatedDay(day);
+    await _storage.saveWeekPlan(updatedPlan);
+    widget.onPlanUpdated(updatedPlan);
+    setState(() {});
   }
 
   // ──────────────────────────────── build ──────────────────────────────────
@@ -82,22 +94,26 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
             isToday: isToday,
             onEditMeal1: () => _editSlot(
               day: day,
-              slotLabel: 'Meal 1 (Lunch)',
-              currentValue: day.meal1,
-              onUpdate: (v) => day.meal1 = v,
+              slotLabel: 'Meal 1 (Dry Sabzi)',
+              currentValue: day.meal1Sabzi,
+              suggestions: widget.drySabzis,
+              onUpdate: (v) => day.meal1Sabzi = v,
             ),
             onEditMeal2: () => _editSlot(
               day: day,
-              slotLabel: 'Meal 2 (Dinner)',
-              currentValue: day.meal2,
-              onUpdate: (v) => day.meal2 = v,
+              slotLabel: 'Meal 2 (Gravy/Dal)',
+              currentValue: day.meal2Main,
+              suggestions: widget.gravyDals,
+              onUpdate: (v) => day.meal2Main = v,
             ),
             onEditTea: () => _editSlot(
               day: day,
               slotLabel: 'Tea',
               currentValue: day.tea,
+              suggestions: [...widget.drySabzis, ...widget.gravyDals],
               onUpdate: (v) => day.tea = v,
             ),
+            onSaveState: () => _saveInstantly(day),
           );
         },
       ),
@@ -113,6 +129,7 @@ class _DayTile extends StatelessWidget {
   final VoidCallback onEditMeal1;
   final VoidCallback onEditMeal2;
   final VoidCallback onEditTea;
+  final VoidCallback onSaveState;
 
   const _DayTile({
     required this.day,
@@ -120,6 +137,7 @@ class _DayTile extends StatelessWidget {
     required this.onEditMeal1,
     required this.onEditMeal2,
     required this.onEditTea,
+    required this.onSaveState,
   });
 
   @override
@@ -202,19 +220,103 @@ class _DayTile extends StatelessWidget {
             const Divider(height: 1, indent: 16, endIndent: 16),
             const SizedBox(height: 8),
             _SlotRow(
-              icon: Icons.restaurant_rounded,
-              label: 'Meal 1',
-              value: day.meal1,
+              icon: Icons.wb_sunny_rounded,
+              label: 'Meal 1 (Afternoon)',
+              value: day.meal1Sabzi,
               color: const Color(0xFFFF7043),
-              onEdit: onEditMeal1,
+              onEdit: day.isSunday ? null : onEditMeal1,
+              isLocked: day.isSunday,
+              subItems: day.isSunday ? null : Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ToggleChip(
+                        option1: 'Roti',
+                        option2: 'Parantha',
+                        currentValue: day.meal1BreadType,
+                        color: const Color(0xFFFF7043),
+                        onChanged: (v) {
+                          day.meal1BreadType = v;
+                          onSaveState();
+                        },
+                      ),
+                      BreadCountEditor(
+                        count: day.meal1BreadCount,
+                        color: const Color(0xFFFF7043),
+                        onChanged: (v) {
+                          day.meal1BreadCount = v;
+                          onSaveState();
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Rice Selection', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
+                      ToggleChip(
+                        option1: 'Rice',
+                        option2: 'Pulao',
+                        currentValue: day.meal1RiceType,
+                        color: const Color(0xFFFF7043),
+                        onChanged: (v) {
+                          day.meal1RiceType = v;
+                          onSaveState();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+            const Divider(height: 16, indent: 64, endIndent: 16),
             _SlotRow(
-              icon: Icons.soup_kitchen_rounded,
-              label: 'Meal 2',
-              value: day.meal2,
+              icon: Icons.nightlight_round,
+              label: 'Meal 2 (Night)',
+              value: day.meal2Main,
               color: const Color(0xFFBF360C),
               onEdit: onEditMeal2,
+              subItems: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Roti', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFBF360C))),
+                      BreadCountEditor(
+                        count: day.meal2BreadCount,
+                        color: const Color(0xFFBF360C),
+                        onChanged: (v) {
+                          day.meal2BreadCount = v;
+                          onSaveState();
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Rice Selection', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
+                      ToggleChip(
+                        option1: 'Rice',
+                        option2: 'Pulao',
+                        currentValue: day.meal2RiceType,
+                        color: const Color(0xFFBF360C),
+                        onChanged: (v) {
+                          day.meal2RiceType = v;
+                          onSaveState();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+            const Divider(height: 16, indent: 64, endIndent: 16),
             _SlotRow(
               icon: Icons.emoji_food_beverage_rounded,
               label: 'Tea',
@@ -222,7 +324,7 @@ class _DayTile extends StatelessWidget {
               color: const Color(0xFFFFB300),
               onEdit: onEditTea,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -237,61 +339,84 @@ class _SlotRow extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
+  final bool isLocked;
+  final Widget? subItems;
 
   const _SlotRow({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
-    required this.onEdit,
+    this.onEdit,
+    this.isLocked = false,
+    this.subItems,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 16),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade500,
-                    letterSpacing: 0.8,
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                Text(
-                  value.isEmpty ? '— Not set' : value,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3E2723),
-                  ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade500,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    Text(
+                      value.isEmpty ? '— Not set' : value,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF3E2723),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              if (isLocked)
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.lock_outline_rounded, color: Colors.grey.shade400, size: 18),
+                )
+              else if (onEdit != null)
+                IconButton(
+                  onPressed: onEdit,
+                  icon: Icon(Icons.edit_rounded, color: color, size: 18),
+                  tooltip: 'Edit $label',
+                ),
+            ],
+          ),
+          if (subItems != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 44, top: 4),
+              child: subItems!,
             ),
-          ),
-          IconButton(
-            onPressed: onEdit,
-            icon: Icon(Icons.edit_rounded, color: color, size: 18),
-            tooltip: 'Edit $label',
-          ),
         ],
       ),
     );

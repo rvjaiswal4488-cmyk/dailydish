@@ -24,26 +24,32 @@ void main() async {
 
   // Load persisted data.
   final storage = StorageService();
-  final rotation = RotationService();
 
   WeekPlan weekPlan = await storage.loadWeekPlan();
-  final dishes = await storage.loadDishList();
+  final drySabzis = await storage.loadDrySabzis();
+  final gravyDals = await storage.loadGravyDals();
 
-  // Run Saturday rotation if applicable.
-  weekPlan = await rotation.checkAndRotate(weekPlan, dishes);
-  await storage.saveWeekPlan(weekPlan);
+  // Rotate based on time logic could go here if needed
+  // For now, rotation is manual or handled on a scheduled check
+  // (Assuming rotation logic handles the separation of dry/gravy)
 
-  runApp(DailyDishApp(initialWeekPlan: weekPlan, initialDishes: dishes));
+  runApp(DailyDishApp(
+    initialWeekPlan: weekPlan, 
+    initialDrySabzis: drySabzis,
+    initialGravyDals: gravyDals,
+  ));
 }
 
 class DailyDishApp extends StatelessWidget {
   final WeekPlan initialWeekPlan;
-  final List<String> initialDishes;
+  final List<String> initialDrySabzis;
+  final List<String> initialGravyDals;
 
   const DailyDishApp({
     super.key,
     required this.initialWeekPlan,
-    required this.initialDishes,
+    required this.initialDrySabzis,
+    required this.initialGravyDals,
   });
 
   @override
@@ -54,7 +60,8 @@ class DailyDishApp extends StatelessWidget {
       theme: _buildTheme(),
       home: MainShell(
         initialWeekPlan: initialWeekPlan,
-        initialDishes: initialDishes,
+        initialDrySabzis: initialDrySabzis,
+        initialGravyDals: initialGravyDals,
       ),
     );
   }
