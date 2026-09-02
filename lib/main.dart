@@ -6,7 +6,6 @@ import 'models/week_plan.dart';
 import 'screens/main_shell.dart';
 import 'services/rotation_service.dart';
 import 'services/storage_service.dart';
-import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +21,6 @@ void main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
-
-  // Initialize notifications
-  await NotificationService().init();
 
   // Load persisted data.
   final storage = StorageService();
