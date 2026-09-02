@@ -30,3 +30,6 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  http: ^1.0.0
