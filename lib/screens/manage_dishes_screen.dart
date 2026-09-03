@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../models/week_plan.dart';
+import '../models/day_plan.dart';
 import '../services/storage_service.dart';
 import '../services/translation_service.dart';
 
 /// Screen for managing the household's dish library.
 /// Split into "Dry Sabzis" (Afternoon) and "Gravy / Dal" (Night).
 class ManageDishesScreen extends StatefulWidget {
+  final WeekPlan weekPlan;
   final List<String> drySabzis;
   final List<String> gravyDals;
+  final void Function(WeekPlan) onPlanUpdated;
   final void Function(List<String>) onDrySabzisUpdated;
   final void Function(List<String>) onGravyDalsUpdated;
   final VoidCallback onToggleTranslation;
 
   const ManageDishesScreen({
     super.key,
+    required this.weekPlan,
     required this.drySabzis,
     required this.gravyDals,
+    required this.onPlanUpdated,
     required this.onDrySabzisUpdated,
     required this.onGravyDalsUpdated,
     required this.onToggleTranslation,
@@ -138,6 +144,35 @@ class _ManageDishesScreenState extends State<ManageDishesScreen>
         setState(() => _gravyDals.remove(dish));
         await _storage.saveGravyDals(_gravyDals);
         widget.onGravyDalsUpdated(_gravyDals);
+      }
+
+      // Synchronize deletion with the weekly plan
+      bool planChanged = false;
+      final newDays = <DayPlan>[];
+      for (final day in widget.weekPlan.days) {
+        final newDay = DayPlan(
+          weekday: day.weekday,
+          memberCount: day.memberCount,
+          riceType: day.riceType,
+          meal1Sabzi: day.meal1Sabzi == dish ? '' : day.meal1Sabzi,
+          meal1BreadType: day.meal1BreadType,
+          meal1BreadCount: day.meal1BreadCount,
+          meal2Main: day.meal2Main == dish ? '' : day.meal2Main,
+          meal2BreadCount: day.meal2BreadCount,
+          tea: day.tea == dish ? '' : day.tea,
+        );
+        if (newDay.meal1Sabzi != day.meal1Sabzi ||
+            newDay.meal2Main != day.meal2Main ||
+            newDay.tea != day.tea) {
+          planChanged = true;
+        }
+        newDays.add(newDay);
+      }
+
+      if (planChanged) {
+        final updatedPlan = WeekPlan(days: newDays);
+        await _storage.saveWeekPlan(updatedPlan);
+        widget.onPlanUpdated(updatedPlan);
       }
     }
   }

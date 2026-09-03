@@ -106,8 +106,10 @@ class _MainShellState extends State<MainShell>
       case 2:
       default:
         return ManageDishesScreen(
+          weekPlan: _weekPlan,
           drySabzis: _drySabzis,
           gravyDals: _gravyDals,
+          onPlanUpdated: _onPlanUpdated,
           onDrySabzisUpdated: _onDrySabzisUpdated,
           onGravyDalsUpdated: _onGravyDalsUpdated,
           onToggleTranslation: _toggleTranslation,
